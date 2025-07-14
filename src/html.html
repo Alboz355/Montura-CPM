@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://bundle.run; connect-src 'self' http://localhost:3000 https://pro-api.coinmarketcap.com https://sepolia.infura.io https://widget.mtpelerin.com https://polygon-mainnet.infura.io; frame-src 'self' https://widget.mtpelerin.com; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data:;">
+    <title>MultiChain Wallet Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
+    <link rel="stylesheet" href="/main.bundle.css"> 
+
+    <script defer src="main.bundle.js"></script>
+    <script defer src="walletSetup.bundle.js"></script>
+</head>
+<body>
+    <div class="background"></div>
+
+    <div class="wallet-setup-screen" id="walletSetupScreen">
+        <div class="wallet-setup-container">
+            <div class="wallet-card">
+                <div id="wallet-welcome-screen">
+                    <div class="wallet-logo-section">
+                        <div class="login-logo">🌐</div>
+                        <h2>MultiChain Wallet Pro</h2>
+                        <p class="subtitle">Créez et gérez vos portefeuilles multi-blockchains en toute sécurité</p>
+                    </div>
+
+                    <div class="wallet-action-buttons">
+                        <button class="wallet-btn wallet-btn-primary" id="createWalletWelcomeBtn">
+                            <span>🔐</span>
+                            <div>Créer un nouveau wallet</div>
+                        </button>
+                        <button class="wallet-btn wallet-btn-secondary" id="importWalletWelcomeBtn">
+                            <span>📥</span>
+                            <div>Importer un wallet existant</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="wallet-create-form" class="wallet-create-form">
+                    <button class="back-btn" id="createFormBackBtn">← Retour</button>
+                    <h3 style="font-size: 24px; margin-bottom: 20px;">Créer votre wallet multichain</h3>
+
+                    <div class="blockchain-selection">
+                        <h4 style="margin-bottom: 15px; color: #f1f5f9;">Sélectionnez les blockchains à supporter:</h4>
+                        <div class="blockchain-grid" id="blockchainGrid"></div>
+                    </div>
+                    <div class="selected-chains" id="selectedChains" style="display: none;">
+                        <h4>Blockchains sélectionnées:</h4>
+                        <div id="selectedChainsList"></div>
+                    </div>
+                    <form id="walletCreateForm" style="margin-top: 30px;">
+                        <div class="form-group">
+                            <label class="form-label">Mot de passe pour sécuriser votre wallet</label>
+                            <input type="number" class="input-field" id="createPassword" placeholder="Choisissez un code PIN à 5 chiffres" required pattern="\d{5}" maxlength="5" oninput="this.value=this.value.slice(0,this.maxLength)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirmez le mot de passe</label>
+                            <input type="number" class="input-field" id="confirmPassword" placeholder="Confirmez votre code PIN" required pattern="\d{5}" maxlength="5" oninput="this.value=this.value.slice(0,this.maxLength)">
+                        </div>
+                        <button type="submit" class="submit-btn" id="createWalletBtn" disabled>
+                            <span>🚀</span>
+                            Créer le wallet multichain
+                        </button>
+                    </form>
+                </div>
+
+                <div id="wallet-import-form" class="wallet-import-form">
+                    <button class="back-btn" id="importFormBackBtn">← Retour</button>
+                    <h3 style="font-size: 24px; margin-bottom: 30px;">Importer votre wallet</h3>
+                    <form id="walletImportForm">
+                        <div class="form-group">
+                            <label class="form-label">Phrase de récupération (12-24 mots)</label>
+                            <textarea class="input-field" id="mnemonic" placeholder="Entrez votre phrase de récupération séparée par des espaces..." required style="min-height: 120px;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mot de passe (optionnel)</label>
+                            <input type="number" class="input-field" id="importPassword" placeholder="Code PIN pour sécuriser votre wallet (5 chiffres)" pattern="\d{5}" maxlength="5" oninput="this.value=this.value.slice(0,this.maxLength)">
+                        </div>
+                        <button type="submit" class="submit-btn">
+                            <span>🔓</span>
+                            Importer le wallet
+                        </button>
+                    </form>
+                </div>
+
+                <div id="wallet-loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p id="loadingMessage" style="margin-top: 20px; color: #f1f5f9;">Génération de votre wallet multichain en cours...</p>
+                    <p style="color: #94a3b8; font-size: 14px; margin-top: 10px;">Création des adresses pour toutes les blockchains sélectionnées</p>
+                </div>
+
+                <div id="wallet-success-message" class="success-message" style="display: none;">
+                    <h3 style="font-size: 24px; margin-bottom: 10px;">✅ Wallet multichain créé avec succès!</h3>
+                    <p>Votre wallet a été généré de manière sécurisée pour toutes les blockchains sélectionnées.</p>
+                </div>
+
+                <div id="wallet-info-display" class="wallet-info-display" style="display: none;">
+                    <h4 style="margin-bottom: 20px; color: #f1f5f9;">Informations de votre wallet multichain:</h4>
+
+                    <div style="margin-bottom: 25px;">
+                        <p style="font-weight: 600; margin-bottom: 10px;">🔑 Phrase de récupération:</p>
+                        <div id="wallet-mnemonic-display" class="wallet-address-display"></div>
+                    </div>
+                    <div id="addresses-container"></div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="mnemonic-saved-checkbox">
+                        <label for="mnemonic-saved-checkbox" style="font-size: 14px; color: #e2e8f0;">J'ai bien noté ma phrase de récupération en lieu sûr.</label>
+                    </div>
+
+                    <div class="warning-message">
+                        ⚠️ <strong>Important:</strong> Sauvegardez cette phrase de récupération en lieu sûr. Elle est nécessaire pour récupérer votre wallet sur toutes les blockchains.
+                    </div>
+
+                    <button class="submit-btn" style="margin-top: 30px;" disabled id="finalizeBtn">
+                        <span>✨</span>
+                        Finaliser la configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="login-screen" id="loginScreen" style="display: none;">
+        <div class="login-container">
+            <div class="login-logo">💳</div>
+            <div class="pin-title">Entrez votre code PIN</div>
+            <div class="pin-dots" id="pinDotsContainer"></div>
+            <div id="pinAttemptsMessage" class="pin-attempts-message" style="display: none; color: #ff3b30; margin: 10px 0; text-align: center;"></div>
+            <div class="pin-pad">
+                <div class="pin-button" data-pin="1">1</div>
+                <div class="pin-button" data-pin="2">2</div>
+                <div class="pin-button" data-pin="3">3</div>
+                <div class="pin-button" data-pin="4">4</div>
+                <div class="pin-button" data-pin="5">5</div>
+                <div class="pin-button" data-pin="6">6</div>
+                <div class="pin-button" data-pin="7">7</div>
+                <div class="pin-button" data-pin="8">8</div>
+                <div class="pin-button" data-pin="9">9</div>
+                <div></div>
+                <div class="pin-button" data-pin="0">0</div>
+                <div class="pin-button delete" data-action="delete">⌫</div>
+            </div>
+            <div id="forgotPinSection" style="display: none; margin-top: 20px; text-align: center;">
+                <p style="color: #8e8e93; margin-bottom: 15px;">Vous avez oublié votre code PIN ?</p>
+                <form id="recoveryForm" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Phrase de récupération</label>
+                        <textarea class="input-field" id="recoveryMnemonic" placeholder="Entrez votre phrase de récupération..." required style="min-height: 100px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nouveau code PIN</label>
+                        <input type="number" class="input-field" id="newPin" placeholder="Nouveau code PIN (5 chiffres)" required pattern="\d{5}" maxlength="5" oninput="this.value=this.value.slice(0,this.maxLength)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirmez le nouveau code PIN</label>
+                        <input type="number" class="input-field" id="confirmNewPin" placeholder="Confirmez le nouveau code PIN" required pattern="\d{5}" maxlength="5" oninput="this.value=this.value.slice(0,this.maxLength)">
+                    </div>
+                    <button type="submit" class="submit-btn" style="margin-top: 15px;">
+                        <span>🔐</span>
+                        Réinitialiser le code PIN
+                    </button>
+                </form>
+                <button id="showRecoveryFormBtn" class="wallet-btn wallet-btn-secondary">
+                    <span>🔑</span>
+                    Récupérer mon code PIN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer" style="display: none;">
+        <div class="header">
+            <div class="logo-section">
+                <div class="app-logo">💳</div>
+                <div class="app-name">CryptoPay Pro</div>
+            </div>
+
+            <div class="header-actions">
+                <div class="mode-switcher">
+                    <div class="mode-btn active" onclick="window.switchMode('wallet', event)">Wallet</div>
+                    <div class="mode-btn" onclick="window.switchMode('tpe', event)">Mode TPE</div>
+                </div>
+
+                <div class="user-section">
+                <div onclick="window.openProfileSettings()" style="cursor: pointer;"> <div style="font-size: 14px; color: #8e8e93;">Bonjour,</div>
+                    <div style="font-size: 16px; font-weight: 600;" id="userNameDisplay">Alexandre</div>
+                </div>
+                <div class="user-avatar" onclick="window.openProfileSettings()" style="cursor: pointer;">👤</div> <button class="action-btn" onclick="window.logout()" style="background: rgba(255,59,48,0.2); color: #ff3b30; border: none; padding: 10px 15px; border-radius: 10px; font-size: 14px; margin-left: 20px;">
+                    Déconnexion
+                </button>
+            </div>
+            </div> </div> <div class="sidebar" id="sidebar"></div>
+
+        <div class="main-content" id="mainContent"></div>
+    </div> <div class="modal-overlay" id="modalOverlay" onclick="window.closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle"></h2>
+                <div class="close-btn" onclick="window.closeModal()">✕</div>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <div class="notification-container" id="notificationContainer"></div>
+
+</body>
+</html>
